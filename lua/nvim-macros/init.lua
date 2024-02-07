@@ -50,6 +50,7 @@ M.yank = function(register)
 		return
 	end
 
+	register_content = register_content:gsub("\128\253a", "")
 	local macro = vim.fn.keytrans(register_content)
 	util.set_macro_to_register(macro)
 	util.print_message("Yanked macro from `" .. register .. "` to clipboard.")
@@ -85,13 +86,13 @@ M.save_macro = function(register)
 		util.print_error("Register `" .. register .. "` is empty or invalid!")
 		return
 	end
-
 	local name = vim.fn.input("Name your macro: ")
 	if not name or name == "" then
 		util.print_error("Invalid or empty macro name.")
 		return
 	end
 
+	register_content = register_content:gsub("\128\253a", "")
 	local macro = vim.fn.keytrans(register_content)
 	local macro_raw = base64.enc(register_content)
 
