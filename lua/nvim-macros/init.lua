@@ -176,7 +176,7 @@ M.select = function(opts)
 	local conf = require("telescope.config").values
 	pickers
 		.new(opts, {
-			prompt_title = "colors",
+			prompt_title = "Yank a macro to your register.",
 			finder = finders.new_table({
 				results = choices,
 			}),
