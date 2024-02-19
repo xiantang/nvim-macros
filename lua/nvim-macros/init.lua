@@ -146,6 +146,63 @@ M.delete_macro = function()
 	end)
 end
 
+M.select = function(opts)
+	local macros = json.handle_json_file(config.json_formatter, config.json_file_path, "r")
+	if not macros or not macros.macros or #macros.macros == 0 then
+		util.print_error("No macros to select.")
+		return
+	end
+	local choices = {}
+	local name_to_content_map = {}
+	local name_to_encoded_content_map = {}
+	local name_to_index_map = {}
+	for index, macro in ipairs(macros.macros) do
+		if macro.name and macro.content and macro.raw then
+			local display_text = macro.name .. " | " .. string.sub(macro.content, 1, 150)
+			table.insert(choices, display_text)
+			name_to_index_map[display_text] = index
+			name_to_content_map[display_text] = macro.content
+			name_to_encoded_content_map[display_text] = macro.raw
+		end
+	end
+	if next(choices) == nil then
+		util.print_error("No valid macros to yank.")
+		return
+	end
+	local pickers = require("telescope.pickers")
+	local finders = require("telescope.finders")
+	local actions = require("telescope.actions")
+	local action_state = require("telescope.actions.state")
+	local conf = require("telescope.config").values
+	pickers
+		.new(opts, {
+			prompt_title = "colors",
+			finder = finders.new_table({
+				results = choices,
+			}),
+			sorter = conf.generic_sorter(opts),
+			attach_mappings = function(prompt_bufnr, map)
+				actions.select_default:replace(function()
+					actions.close(prompt_bufnr)
+					local selection = action_state.get_selected_entry()
+					local choice = selection[1]
+					local macro_index = name_to_index_map[choice]
+					local macro_name = macros.macros[macro_index].name
+					local macro_content = name_to_content_map[choice]
+					local encoded_content = name_to_encoded_content_map[choice]
+					if not macro_content or not encoded_content then
+						util.print_error("Selected macro `" .. choice .. "` has missing content.")
+						return
+					end
+					local target_register = config.default_macro_register
+					util.set_decoded_macro_to_register(encoded_content, target_register)
+				end)
+				return true
+			end,
+		})
+		:find()
+end
+
 -- Select and yank macro from JSON (Raw or Escaped)
 M.select_and_yank_macro = function()
 	local macros = json.handle_json_file(config.json_formatter, config.json_file_path, "r")
