@@ -182,6 +182,26 @@ M.select = function(opts)
 			}),
 			sorter = conf.generic_sorter(opts),
 			attach_mappings = function(prompt_bufnr, map)
+				map({ "i", "n" }, "<C-r>", function(_prompt_bufnr)
+					actions.close(prompt_bufnr)
+					-- change to nomarl mode
+					local keys = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
+					vim.api.nvim_feedkeys(keys, "n", true)
+					local selection = action_state.get_selected_entry()
+					local choice = selection[1]
+					local macro_index = name_to_index_map[choice]
+					local macro_name = macros.macros[macro_index].name
+					local macro_content = name_to_content_map[choice]
+					local encoded_content = name_to_encoded_content_map[choice]
+					if not macro_content or not encoded_content then
+						util.print_error("Selected macro `" .. choice .. "` has missing content.")
+						return
+					end
+					local target_register = config.default_macro_register
+					util.set_decoded_macro_to_register(encoded_content, target_register)
+					vim.cmd.norm("@a")
+					return true
+				end, { desc = "desc for which key" })
 				actions.select_default:replace(function()
 					actions.close(prompt_bufnr)
 					local selection = action_state.get_selected_entry()
