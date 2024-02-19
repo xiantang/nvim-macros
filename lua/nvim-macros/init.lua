@@ -176,7 +176,7 @@ M.select = function(opts)
 	local conf = require("telescope.config").values
 	pickers
 		.new(opts, {
-			prompt_title = "Yank a macro to your register.",
+			prompt_title = "Yank a macro to your register, Run a macro using <C-R>",
 			finder = finders.new_table({
 				results = choices,
 			}),
